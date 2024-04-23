@@ -206,3 +206,43 @@ class ApproximateQAgent(PacmanQAgent):
             # you might want to print your weights here for debugging
             "*** YOUR CODE HERE ***"
             pass
+
+class SemiGradient(QLearningAgent):
+    
+    def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.2,lamb=0.8,numTraining=0, extractor='IdentityExtractor', trace, **args):
+        args['epsilon'] = epsilon
+        args['gamma'] = gamma
+        args['alpha'] = alpha
+        args['numTraining'] = numTraining
+        self.index = 0
+
+        self.featExtractor = util.lookup(extractor, globals())()
+        self.weights = util.Counter()
+        QLearningAgent.__init__(self, **args)
+
+    def getWeights(self):
+        return self.weights
+    
+    def getAction(self, state):
+        action = QLearningAgent.getAction(self,state)
+        self.doAction(state,action)
+        return action
+
+    def getQValue(self, state, action):
+        featureVector = self.featExtractor.getFeatures(state, action)
+        qValue = 0
+        for feature in featureVector:
+            qValue += self.weights[feature] * featureVector[feature]
+        return qValue
+
+    def update(self, state, action, nextState, nextAction, reward, done):
+        featureVector = self.featExtractor.getFeatures(state, action)
+        nextQValue = self.get_q_value(nextState, nextAction) if not done else 0
+        qValue = self.getQValue(state, action)
+
+        delta = reward + gamma * nextQValue - qValue
+        self.e = self.gamma * self.lamb * self.e + featureVector
+        self.theta += self.alpha * delta * self.e
+        
+        if done:
+            self.e = np.zeros_like(self.e)
