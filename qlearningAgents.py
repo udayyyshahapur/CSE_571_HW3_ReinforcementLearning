@@ -128,7 +128,7 @@ class QLearningAgent(ReinforcementAgent):
 class PacmanQAgent(QLearningAgent):
     "Exactly the same as QLearningAgent, but with different default parameters"
 
-    def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0, **args):
+    def __init__(self, epsilon=0.05,gamma=0.8,alpha=0.2, numTraining=0,lambda_=0.8, **args):
         """
         These default parameters can be changed from the pacman.py command line.
         For example, to change the exploration rate, try:
@@ -144,6 +144,9 @@ class PacmanQAgent(QLearningAgent):
         args['alpha'] = alpha
         args['numTraining'] = numTraining
         self.index = 0  # This is always Pacman
+        self.gamma = gamma
+        self.lambda_=lambda_
+        self.z = {} 
         QLearningAgent.__init__(self, **args)
 
     def getAction(self, state):
@@ -246,3 +249,68 @@ class SemiGradient(QLearningAgent):
         
         if done:
             self.e = np.zeros_like(self.e)
+
+class SemiGradientTDQAgent(PacmanQAgent):
+    def __init__(self, extractor='IdentityExtractor', **args):
+        self.featExtractor = util.lookup(extractor, globals())()
+        PacmanQAgent.__init__(self, **args)
+        self.weights = util.Counter()
+
+    def getWeights(self):
+        return self.weights
+
+    def getQValue(self, state, action):
+        """
+          Should return Q(state,action) = w * featureVector
+          where * is the dotProduct operator
+        """
+        "*** YOUR CODE HERE ***"
+        features = self.featExtractor.getFeatures(state, action)
+        qValue = sum(self.weights[feature] * features[feature] for feature in features)
+        return qValue
+        util.raiseNotDefined()
+    def updateQValue(self, state, action, nextState,reward):
+      # Get the maximum Q-value for the next state
+      legalActions = self.getLegalActions(state)
+      bestNextQvalue = max(
+          [self.getQValue(nextState, a) for a in legalActions],
+          default=0,
+      )
+
+      # Calculate the temporal difference (TD) error
+      td_error = reward + self.gamma * bestNextQvalue - self.getQValue(state, action)
+
+      # Update the Q-value with the Q-Learning formula
+      
+      self.qValues[(state, action)] = (
+          self.getQValue(state, action) + self.alpha * td_error
+      )
+      features = self.featExtractor.getFeatures(state, action)
+      # for feature in features:
+      #     self.weights[feature] += self.alpha * td_error * features[feature]
+      for feature in features:
+          self.z[feature] = self.gamma * self.lambda_ * self.z.get(feature, 0) + features[feature]
+      for feature in features:
+        if feature not in self.weights:
+            self.weights[feature] = 0
+        self.weights[feature] += self.alpha * td_error * self.z[feature]
+
+    def update(self, state, action, nextState, reward):
+        """
+           Should update your weights based on transition
+        """
+        "*** YOUR CODE HERE ***"
+        self.updateQValue(state, action, nextState,reward)
+
+    def final(self, state):
+        "Called at the end of each game."
+        # call the super-class final method
+        PacmanQAgent.final(self, state)
+
+        # did we finish training?
+        if self.episodesSoFar == self.numTraining:
+            # you might want to print your weights here for debugging
+            "*** YOUR CODE HERE ***"
+            print("Final weights:", self.weights)
+            pass
+
