@@ -255,44 +255,41 @@ class SemiGradientTDQAgent(PacmanQAgent):
         if random.random() < self.epsilon:  # Exploration: Random action
           action = random.choice(legalActions)
         else:
-          for action in legalActions:
-            qValue = self.getQValue(state, action)
-            if qValue > maxQValue:
-                maxQValue = qValue
-                bestActions = [action]
-            elif qValue == maxQValue:
-                bestActions.append(action)
-          action=random.choice(bestActions)
-        self.doAction(state,action)
-        return action
+            for action in legalActions:
+                qValue = self.getQValue(state, action)
+                if qValue > maxQValue:
+                    maxQValue = qValue
+                    bestActions = [action]
+                elif qValue == maxQValue:
+                    bestActions.append(action)
+            action=random.choice(bestActions)
+            self.doAction(state,action)
+            return action
     
     def nextBestQValue(self, state,nextState):
-      legalActions = self.getLegalActions(state)
-      if random.random() < self.epsilon:  # Exploration: Random action
-        random_action = random.choice(legalActions)
-        return self.getQValue(state, random_action)
-      else:
-        return max(
-        [self.getQValue(nextState, a) for a in legalActions],
-        default=0,
-        )
+        legalActions = self.getLegalActions(state)
+        if random.random() < self.epsilon:  # Exploration: Random action
+            random_action = random.choice(legalActions)
+            return self.getQValue(state, random_action)
+        else:
+            return max(
+            [self.getQValue(nextState, a) for a in legalActions],
+            default=0,
+            )
+      
     def updateQValue(self, state, action, nextState,reward):
-      bestNextQvalue = self.nextBestQValue(state,nextState)
+        bestNextQvalue = self.nextBestQValue(state,nextState)
 
-      # Calculate the temporal difference (TD) error
-      td_error = reward + self.gamma * bestNextQvalue - self.getQValue(state, action)
+        # Calculate the temporal difference (TD) error
+        td_error = reward + self.gamma * bestNextQvalue - self.getQValue(state, action)
 
-      # Update the Q-value with the Q-Learning formula
-      # self.qValues[(state, action)] = (
-      #     self.getQValue(state, action) + self.alpha * td_error
-      # )
-      features = self.featExtractor.getFeatures(state, action)
-      for feature in features:
-          self.z[feature] = self.gamma * self.lambda_ * self.z.get(feature, 0) + features[feature]
-      for feature in features:
-        if feature not in self.weights:
-            self.weights[feature] = 0
-        self.weights[feature] += self.alpha * td_error * self.z[feature]
+        features = self.featExtractor.getFeatures(state, action)
+        for feature in features:
+            self.z[feature] = self.gamma * self.lambda_ * self.z.get(feature, 0) + features[feature]
+        for feature in features:
+            if feature not in self.weights:
+                self.weights[feature] = 0
+            self.weights[feature] += self.alpha * td_error * self.z[feature]
 
     def update(self, state, action, nextState, reward):
         """
@@ -334,6 +331,7 @@ class TrueOnlineTDQAgent(PacmanQAgent):
         qValue = sum(self.weights[feature] * features[feature] for feature in features)
         return qValue
         util.raiseNotDefined()
+
     def getAction(self, state):
         legalActions = self.getLegalActions(state)
         if not legalActions:
@@ -342,54 +340,55 @@ class TrueOnlineTDQAgent(PacmanQAgent):
         bestActions = []
         action=None
         if random.random() < self.epsilon:  # Exploration: Random action
-          action = random.choice(legalActions)
+            action = random.choice(legalActions)
         else:
-          for action in legalActions:
-            qValue = self.getQValue(state, action)
-            if qValue > maxQValue:
-                maxQValue = qValue
-                bestActions = [action]
-            elif qValue == maxQValue:
-                bestActions.append(action)
-          action=random.choice(bestActions)
+            for action in legalActions:
+                qValue = self.getQValue(state, action)
+                if qValue > maxQValue:
+                    maxQValue = qValue
+                    bestActions = [action]
+                elif qValue == maxQValue:
+                    bestActions.append(action)
+            action=random.choice(bestActions)
         self.doAction(state,action)
         return action
     
     def nextBestQValue(self, state,nextState):
         legalActions = self.getLegalActions(state)
         if random.random() < self.epsilon:  # Exploration: Random action
-          random_action = random.choice(legalActions)
-          return self.getQValue(state, random_action)
+            random_action = random.choice(legalActions)
+            return self.getQValue(state, random_action)
         else:
-          return max(
-          [self.getQValue(nextState, a) for a in legalActions],
-          default=0,
-          )
+            return max(
+            [self.getQValue(nextState, a) for a in legalActions],
+            default=0,
+            )
+        
     def updateQValue(self, state, action, nextState,reward):
-      V = self.getQValue(state, action)
-      V_prime = self.nextBestQValue(state,nextState)
-      td_error = reward + self.gamma * V_prime-V
+        V = self.getQValue(state, action)
+        V_prime = self.nextBestQValue(state,nextState)
+        td_error = reward + self.gamma * V_prime-V
 
-      # Update the eligibility trace  
-      features = self.featExtractor.getFeatures(state, action)
-      for feature in features:
-          if feature not in self.z:
-            self.z[feature] = 0
-      zTx = sum(self.z[feature] * features[feature] for feature in features)
+        # Update the eligibility trace  
+        features = self.featExtractor.getFeatures(state, action)
+        for feature in features:
+            if feature not in self.z:
+                self.z[feature] = 0
+        zTx = sum(self.z[feature] * features[feature] for feature in features)
 
-      for feature in features:
-          t1=self.gamma * self.lambda_ * self.z[feature]
-          t2= (1 - self.alpha * self.gamma * self.lambda_ * zTx) * features[feature]
-          self.z[feature]=t1+t2
+        for feature in features:
+            t1=self.gamma * self.lambda_ * self.z[feature]
+            t2= (1 - self.alpha * self.gamma * self.lambda_ * zTx) * features[feature]
+            self.z[feature]=t1+t2
 
       # Update Weights with True Online TD(λ) logic
-      for feature in features:
-          if feature not in self.weights:
-            self.weights[feature] = 0
-          w1= self.alpha * (td_error + V - self.Vold) * self.z[feature]
-          w2= self.alpha * (V - self.Vold) * features[feature]
-          self.weights[feature]+=w1-w2
-      self.Vold=V_prime
+        for feature in features:
+            if feature not in self.weights:
+                self.weights[feature] = 0
+            w1= self.alpha * (td_error + V - self.Vold) * self.z[feature]
+            w2= self.alpha * (V - self.Vold) * features[feature]
+            self.weights[feature]+=w1-w2
+        self.Vold=V_prime
         
 
     def update(self, state, action, nextState, reward):
