@@ -44,7 +44,7 @@ def simulate_pacman_games():
     scores_list = []
     rates_list = []
 
-    print(agents)
+    # print(agents)
     for agent in agents:
         for layout in map_layouts:
             print(layout)
