@@ -283,9 +283,9 @@ class SemiGradientTDQAgent(PacmanQAgent):
       td_error = reward + self.gamma * bestNextQvalue - self.getQValue(state, action)
 
       # Update the Q-value with the Q-Learning formula
-      self.qValues[(state, action)] = (
-          self.getQValue(state, action) + self.alpha * td_error
-      )
+      # self.qValues[(state, action)] = (
+      #     self.getQValue(state, action) + self.alpha * td_error
+      # )
       features = self.featExtractor.getFeatures(state, action)
       for feature in features:
           self.z[feature] = self.gamma * self.lambda_ * self.z.get(feature, 0) + features[feature]
