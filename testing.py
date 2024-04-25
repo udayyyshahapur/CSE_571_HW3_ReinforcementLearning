@@ -76,5 +76,6 @@ def perform_statistical_comparisons():
                     t_stat, p_val = ttest_rel(simulation_results[agent_1][index], simulation_results[agent_2][index])
                     print(f"T-test between {agent_1} and {agent_2} on {layout}: T-stat={t_stat}, P-value={p_val}")
 
-perform_statistical_comparisons()
+
 simulate_pacman_games()
+perform_statistical_comparisons()
