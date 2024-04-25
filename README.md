@@ -34,9 +34,9 @@ pip install scipy
 
 This repository contains the Python script `testing.py`, which is designed to evaluate and compare the performance of three reinforcement learning algorithms: SemiGradientTDQAgent, ApproximateQAgent, and TrueOnlineTDQAgent. The evaluations are conducted using the Pac-Man game simulations under different layouts.
 
-- **Simulation Execution**: Run multiple simulations of Pac-Man with varying ghost numbers to gather performance data for each algorithm.
-- **Statistical Comparison**: Utilize the paired Student's t-test to statistically analyze the performance differences between the agents on different game layouts.
-- **Visualization**: Generate plots to visually compare the performance metrics of the agents, helping in identifying the best configurations under various conditions.
+- Simulation Execution: Run multiple simulations of Pac-Man with varying ghost numbers to gather performance data for each algorithm.
+- Statistical Comparison: Utilize the paired Student's t-test to statistically analyze the performance differences between the agents on different game layouts.
+- Visualization: Generate plots to visually compare the performance metrics of the agents, helping in identifying the best configurations under various conditions.
 
 To initiate the testing and visualization process, we use the command: python testing.py
 
