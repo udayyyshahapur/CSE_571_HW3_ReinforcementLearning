@@ -263,7 +263,7 @@ class SemiGradientTDQAgent(PacmanQAgent):
                     bestActions.append(action)
             action=random.choice(bestActions)
             self.doAction(state,action)
-            return action
+        return action
     
     def nextBestQValue(self, state,nextState):
         legalActions = self.getLegalActions(state)
