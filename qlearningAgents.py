@@ -139,7 +139,7 @@ class QLearningAgent(ReinforcementAgent):
 class PacmanQAgent(QLearningAgent):
     "Exactly the same as QLearningAgent, but with different default parameters"
 
-    def __init__(self, epsilon=0.01,gamma=0.9,alpha=2**-12, numTraining=0,lambda_=0.8, **args):
+    def __init__(self, epsilon=0.01,gamma=0.9,alpha=0.0001, numTraining=0,lambda_=0.8, **args):
         """
         These default parameters can be changed from the pacman.py command line.
         For example, to change the exploration rate, try:
@@ -245,7 +245,6 @@ class SemiGradientTDQAgent(PacmanQAgent):
         informs parent of action for Pacman.  Do not change or remove this
         method.
         """
-        #action = QLearningAgent.getAction(self,state)
         legalActions = self.getLegalActions(state)
         if not legalActions:
             return None
@@ -277,15 +276,17 @@ class SemiGradientTDQAgent(PacmanQAgent):
             default=0,
             )
       
-    def updateQValue(self, state, action, nextState,reward):
+    def updateWeights(self, state, action, nextState,reward):
         bestNextQvalue = self.nextBestQValue(state,nextState)
-
         # Calculate the temporal difference (TD) error
         td_error = reward + self.gamma * bestNextQvalue - self.getQValue(state, action)
 
         features = self.featExtractor.getFeatures(state, action)
+        #Update trace vector with semi-gradient TD logic
         for feature in features:
             self.z[feature] = self.gamma * self.lambda_ * self.z.get(feature, 0) + features[feature]
+        
+        #Update weights vector
         for feature in features:
             if feature not in self.weights:
                 self.weights[feature] = 0
@@ -296,7 +297,7 @@ class SemiGradientTDQAgent(PacmanQAgent):
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
-        self.updateQValue(state, action, nextState,reward)
+        self.updateWeights(state, action, nextState,reward)
 
     def final(self, state):
         "Called at the end of each game."
@@ -316,9 +317,6 @@ class TrueOnlineTDQAgent(PacmanQAgent):
         self.featExtractor = util.lookup(extractor, globals())()
         PacmanQAgent.__init__(self, **args)
         self.weights = util.Counter()
-
-    # def getWeights(self):
-    #     return self.weights
 
     def getQValue(self, state, action):
         """
@@ -364,7 +362,7 @@ class TrueOnlineTDQAgent(PacmanQAgent):
             default=0,
             )
         
-    def updateQValue(self, state, action, nextState,reward):
+    def updateWeights(self, state, action, nextState,reward):
         V = self.getQValue(state, action)
         V_prime = self.nextBestQValue(state,nextState)
         td_error = reward + self.gamma * V_prime-V
@@ -396,7 +394,7 @@ class TrueOnlineTDQAgent(PacmanQAgent):
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
-        self.updateQValue(state, action, nextState,reward)
+        self.updateWeights(state, action, nextState,reward)
 
     def final(self, state):
         "Called at the end of each game."
